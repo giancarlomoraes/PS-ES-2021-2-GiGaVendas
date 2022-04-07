@@ -1,0 +1,250 @@
+{% extends 'core/base.html' %}
+{% load static %}
+{% load widget_tweaks %}
+{% load extra_template_tags %}
+
+
+{% block extracss %}
+<link rel="stylesheet" href="https://cdn.datatables.net/1.10.25/css/dataTables.bootstrap4.min.css">
+<link rel="stylesheet" href="https://cdn.datatables.net/responsive/2.2.9/css/responsive.bootstrap4.min.css">
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-select@1.13.14/dist/css/bootstrap-select.min.css">
+{% endblock %}
+
+{% block content %}
+<div class="modal fade" id="removeVendaModal" tabindex="-1" role="dialog" aria-labelledby="exampleModalLabel" aria-hidden="true">
+    <div class="modal-dialog" role="document">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="exampleModalLabel">Deseja remover essa Venda?</h5>
+            </div>
+            <div class="modal-body" id="modal-delete-venda"></div>
+            <div class="modal-footer">
+                <form method="post" id="form-modal">
+                    {% csrf_token %}
+                    <button class="btn btn-secondary" type="button" data-dismiss="modal">Cancelar</button>
+                    <button class="btn btn-danger" type="submit">Remover</button>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div id="layoutSidenav_content">
+    <main>
+        <div class="container-fluid px-4 mt-4 mb-5">
+            <div class="card mb-3">
+                <div class="card-body">
+                    <form>
+                        <div class="form-row">
+                            <div class="form-group col-md-3">
+                                {{ filter.form.colaborador.label_tag }}
+                                {% if filter.form.colaborador.errors %}
+                                {% render_field filter.form.colaborador id='select-colaborador' class="form-control selectpicker is-invalid" title="Selecione um Colaborador"  name="colaborador" data-live-search="true" %}
+                                <span class="text-danger"><small>{{ filter.form.colaborador.errors }}</small></span>
+                                {% else %}
+                                {% render_field filter.form.colaborador id='select-colaborador' class="form-control selectpicker" title="Selecione um Colaborador"  name="colaborador" data-live-search="true" %}
+                                {% endif %}
+                            </div>
+                            <div class="form-group col-md-3">
+                                {{ filter.form.cliente.label_tag }}
+                                {% if filter.form.cliente.errors %}
+                                {% render_field filter.form.cliente id='select-cliente' class="form-control selectpicker is-invalid" title="Selecione um Cliente"  name="cliente" data-live-search="true" %}
+                                <span class="text-danger"><small>{{ filter.form.cliente.errors }}</small></span>
+                                {% else %}
+                                {% render_field filter.form.cliente id='select-cliente' class="form-control selectpicker" title="Selecione um Cliente"  name="cliente" data-live-search="true" %}
+                                {% endif %}
+                            </div>
+                            <div class="form-group col-md-3">
+                                {{ filter.form.metodo_pagamento.label_tag }}
+                                {% if filter.form.metodo_pagamento.errors %}
+                                {% render_field filter.form.metodo_pagamento id='select-metodo_pagamento' class="form-control selectpicker is-invalid" title="Selecione um Met. Pagamento"  name="metodo_pagamento" data-live-search="true" %}
+                                <span class="text-danger"><small>{{ filter.form.metodo_pagamento.errors }}</small></span>
+                                {% else %}
+                                {% render_field filter.form.metodo_pagamento id='select-metodo_pagamento' class="form-control selectpicker" title="Selecione um Met. Pagamento"  name="metodo_pagamento" data-live-search="true" %}
+                                {% endif %}
+                            </div>
+                            <div class="form-group col-md-3">
+                                <label for="id_data_hora">Data:</label>
+                                {% if filter.form.data_hora.errors %}
+                                {% render_field filter.form.data_hora class="form-control is-invalid"%}
+                                <span class="text-danger"><small>{{ filter.form.data_hora.errors }}</small></span>
+                                {% else %}
+                                {% render_field filter.form.data_hora class="form-control" %}
+                                {% endif %}
+                            </div>
+                        </div>
+                        <button type="submit" class="btn btn-primary float-right" id="form-add-project-submit">Filtrar</button>
+                    </form>
+                </div>
+            </div>
+            <div class="card">
+                <div class="card-body">
+                    <div class="row mb-3 d-flex justify-content-center">
+                        <div class="card border border-success text-center mx-2 col-md-3">
+                            <div class="card-body">
+                                <h6 class="card-text my-1">Valor Movimentado</h6>
+                                <h4 class="card-title">
+                                    {% count_valor_vendas object_list as valor_movimentado %}
+                                    R$ {{ valor_movimentado|floatformat:2 }}
+                                </h4>
+                                <h6 class="card-subtitle my-1 text-muted">Reais</h6>
+                            </div>
+                        </div>
+                        <div class="card border border-success text-center mx-2 col-md-3">
+                            <div class="card-body">
+                                <h6 class="card-text my-1">Vendas Realizadas</h6>
+                                <h4 class="card-title">
+                                    {{ object_list|length }}
+                                </h4>
+                                <h6 class="card-subtitle my-1 text-muted">Vendas</h6>
+                            </div>
+                        </div>
+                        <div class="card border border-success text-center mx-2 col-md-3">
+                            <div class="card-body">
+                                <h6 class="card-text my-1">Produtos Vendidos</h6>
+                                <h4 class="card-title">
+                                    {% count_produtos_vendas object_list %}
+                                </h4>
+                                <h6 class="card-subtitle my-1 text-muted">Produtos</h6>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="row">
+                        <div class="col-xl-6">
+                            <div class="card mb-4">
+                                <div class="card-header">
+                                    <i class="fas fa-chart-pie me-1"></i>
+                                    Vendas por Método de Pagamento
+                                </div>
+                                <div class="card-body"><canvas id="myDoughnutChart" width="100%" height="40"></canvas></div>
+                            </div>
+                        </div>
+                        <div class="col-xl-6">
+                            <div class="card mb-4">
+                                <div class="card-header">
+                                    <i class="fas fa-chart-bar me-1"></i>
+                                    Colaboradores com mais Vendas
+                                </div>
+                                <div class="card-body"><canvas id="myBarChart" width="100%" height="40"></canvas></div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </main>
+</div>
+
+{% endblock %}
+
+{% block extrajs %}
+<script src="https://cdn.jsdelivr.net/npm/bootstrap-select@1.13.14/dist/js/bootstrap-select.min.js"></script>
+<script src="https://code.jquery.com/jquery-3.5.1.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.1.0/dist/js/bootstrap.bundle.min.js" crossorigin="anonymous"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/2.8.0/Chart.min.js" crossorigin="anonymous"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jquery.mask/1.14.15/jquery.mask.min.js"></script>
+
+<script>
+    $(document).ready(function(){
+        $('#id_data_hora').mask('00/00/0000');
+    });
+</script>
+
+<!-- Doughnut  Chart -->
+<script>
+// Doughnut Chart Example
+var ctx = document.getElementById("myDoughnutChart");
+
+{% count_metodo_pagamento object_list 'Cartão de Crédito' as count_cartao_credito %}
+{% count_metodo_pagamento object_list 'Cartão de Débito' as count_cartao_debito %}
+{% count_metodo_pagamento object_list 'Pix' as count_pix %}
+{% count_metodo_pagamento object_list 'Dinheiro' as count_dinheiro %}
+
+var myPieChart = new Chart(ctx, {
+  type: 'doughnut',
+  data: {
+    labels: [
+        {% if count_cartao_credito > 0 %}"Cartão de Crédito",{% endif %}
+        {% if count_cartao_debito > 0 %}"Cartão de Débito",{% endif %}
+        {% if count_pix > 0 %}"Pix",{% endif %}
+        {% if count_dinheiro > 0 %}"Dinheiro",{% endif %}
+    ],
+    datasets: [{
+      data: [
+          {% if count_cartao_credito > 0 %}{{ count_cartao_credito }},{% endif %}
+          {% if count_cartao_debito > 0 %}{{ count_cartao_debito }},{% endif %}
+          {% if count_pix > 0 %}{{ count_pix }},{% endif %}
+          {% if count_dinheiro > 0 %}{{ count_dinheiro }},{% endif %}
+      ],
+      backgroundColor: [
+          {% if count_cartao_credito > 0 %}'#cd3333',{% endif %}
+          {% if count_vulns_alto > 0 %}'#ff3333',{% endif %}
+          {% if count_pix > 0 %}'#ffcd33',{% endif %}
+          {% if count_dinheiro > 0 %}'#33c073'{% endif %}
+      ],
+      hoverBackgroundColor: [
+          {% if count_cartao_credito > 0 %}'#C00000',{% endif %}
+          {% if count_vulns_alto > 0 %}'#FF0000',{% endif %}
+          {% if count_pix > 0 %}'#FFC000',{% endif %}
+          {% if count_dinheiro > 0 %}'#00B050'{% endif %}
+      ],
+    }],
+  },
+});
+
+</script>
+
+<!-- Bar Chart -->
+<script>
+// Set new default font family and font color to mimic Bootstrap's default styling
+Chart.defaults.global.defaultFontFamily = '-apple-system,system-ui,BlinkMacSystemFont,"Segoe UI",Roboto,"Helvetica Neue",Arial,sans-serif';
+Chart.defaults.global.defaultFontColor = '#292b2c';
+
+var ctx = document.getElementById("myBarChart");
+
+{% top_tres_colaboradores object_list as top_tres %}
+
+var myLineChart = new Chart(ctx, {
+  type: 'bar',
+  data: {
+    labels: [
+        "{{ top_tres.0.colaborador }}",
+        "{{ top_tres.1.colaborador }}",
+        "{{ top_tres.2.colaborador }}",
+    ],
+    datasets: [{
+      label: "Colaboradores",
+      backgroundColor: "rgba(2,117,216,1)",
+      borderColor: "rgba(2,117,216,1)",
+      data: [
+          {{ top_tres.0.vendas }},
+          {{ top_tres.1.vendas }},
+          {{ top_tres.2.vendas }},
+      ],
+    }],
+  },
+  options: {
+    scales: {
+      xAxes: [{
+        gridLines: {
+          display: false
+        },
+      }],
+      yAxes: [{
+          ticks: {
+              min: 0,
+              precision:0
+            },
+        gridLines: {
+          display: true
+        }
+      }],
+    },
+    legend: {
+      display: false
+    }
+  }
+});
+</script>
+
+{% endblock %}

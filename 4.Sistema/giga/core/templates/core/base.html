@@ -1,0 +1,146 @@
+{% load static %}
+{% load extra_template_tags %}
+
+<!DOCTYPE html>
+<html lang="en">
+    <head>
+    <meta charset="utf-8">
+    <!-- Favicon -->
+    <link rel="shortcut icon" href="{% static 'img/favicon.ico' %}" />
+    <meta http-equiv="X-UA-Compatible" content="IE=edge" />
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <meta name="description" content="" />
+    <meta name="author" content="" />
+    <title>Giga Vendas</title>
+    <link href="{% static 'css/styles.css' %}" rel="stylesheet" type="text/css" />
+    <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/4.0.0/css/bootstrap.min.css" integrity="sha384-Gn5384xqQ1aoWXA+058RXPxPg6fy4IWvTNh0E263XmFcJlSAwiGgFAW/dAiS6JXm" crossorigin="anonymous">
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.3/js/all.min.js" crossorigin="anonymous"></script>
+    {% block extracss %}
+    {% endblock %}
+    {% block chartsjs %}
+    {% endblock %}
+
+    </head>
+    <body class="sb-nav-fixed" id="sidenavMenu">
+        <!-- Logout Modal-->
+         <div class="modal fade" id="logoutModal" tabindex="-1" role="dialog" aria-labelledby="exampleModalLabel"
+            aria-hidden="true">
+            <div class="modal-dialog" role="document">
+               <div class="modal-content">
+                  <div class="modal-header">
+                     <h5 class="modal-title" id="exampleModalLabel">Deseja Sair?</h5>
+                  </div>
+                  <div class="modal-body">Selecione "Logout" abaixo para encerrar sua sessão atual.</div>
+                  <div class="modal-footer">
+                    <button class="btn btn-secondary" type="button" data-dismiss="modal">Cancelar</button>
+                     <a class="btn btn-danger" href="{% url 'logout' %}">Logout</a>
+                  </div>
+               </div>
+            </div>
+         </div>
+        <nav class="sb-topnav navbar navbar-expand navbar-dark bg-dark" style="height: 65px">
+            <!-- Navbar Brand-->
+            <!-- Sidebar Toggle-->
+            <button class="btn btn-link btn-sm order-1 order-lg-0 me-4 me-lg-0" id="sidebarToggle" href="#!"><i class="fas fa-bars"></i></button>
+            <a class="navbar-brand ml-3" href="{% url 'core:index' %}">
+                GigaVendas
+            </a>
+            <!-- Navbar-->
+
+            <ul class="navbar-nav -md-inline-block form-inline ms-auto me-0 me-md-3 my-2 my-md-0">
+                <li class="nav-item dropdown">
+                    <a class="nav-link dropdown-toggle" href="#" id="navbarDropdownMenuLink" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
+                        {% if request.user.first_name %}{{ request.user.first_name }} {{ request.user.last_name }}{% else %}{{ request.user.username }}{% endif %}
+                         &nbsp<i class="fas fa-user fa-fw"></i>
+                    </a>
+                    <ul class="dropdown-menu dropdown-menu-end" aria-labelledby="navbarDropdown">
+                        <li><a class="dropdown-item" href="{% url 'core:self_change_password' %}">Alterar Senha</a></li>
+                        <li><a class="dropdown-item" href="#" data-toggle="modal" data-target="#logoutModal">Logout</a></li>
+                    </ul>
+                </li>
+            </ul>
+        </nav>
+
+        <div id="layoutSidenav" class="mt-3">
+            <div id="layoutSidenav_nav">
+                <nav class="sb-sidenav accordion sb-sidenav-dark" id="sidenavAccordion">
+                    <div class="sb-sidenav-menu">
+                        <div class="nav">
+                            {% check_permission request.user "can_see_clientes" as has_permission_cliente %}
+                            {% check_permission request.user "can_see_colaboradores" as has_permission_colaborador %}
+                            {% if has_permission_cliente or has_permission_colaborador or request.user.is_superuser %}
+                            <div class="sb-sidenav-menu-heading">Usuários</div>
+                            {% endif %}
+                            {% if has_permission_cliente or request.user.is_superuser %}
+                            <a class="nav-link {% if request.resolver_match.url_name == 'listar_clientes' or request.resolver_match.url_name == 'adicionar_cliente' or request.resolver_match.url_name == 'editar_cliente' or request.resolver_match.url_name == 'change_cliente_password' %}active{% endif %}" href="{% url 'comercio:listar_clientes' %}">
+                                <div class="sb-nav-link-icon"><i class="fas fa-user-friends"></i></div>
+                                Clientes
+                            </a>
+                            {% endif %}
+                            {% if has_permission_colaborador or request.user.is_superuser %}
+                            <a class="nav-link {% if request.resolver_match.url_name == 'listar_colaboradores' or request.resolver_match.url_name == 'adicionar_colaborador' or request.resolver_match.url_name == 'editar_colaborador' or request.resolver_match.url_name == 'change_colaborador_password' %}active{% endif %}" href="{% url 'comercio:listar_colaboradores' %}">
+                                <div class="sb-nav-link-icon"><i class="fas fa-user-friends"></i></div>
+                                Colaboradores
+                            </a>
+                            {% endif %}
+                            {% check_permission request.user "can_see_produtos" as has_permission_projeto %}
+                            {% if has_permission_projeto or request.user.is_superuser %}
+                            <div class="sb-sidenav-menu-heading">Produtos</div>
+                            <a class="nav-link {% if request.resolver_match.url_name == 'listar_produtos' or request.resolver_match.url_name == 'adicionar_produto' or request.resolver_match.url_name == 'editar_produto' %}active{% endif %}" href="{% url 'comercio:listar_produtos' %}">
+                                <div class="sb-nav-link-icon"><i class="fas fa-boxes"></i></div>
+                                Ver Produtos
+                            </a>
+                            {% endif %}
+                            {% check_permission request.user "can_see_vendas" as has_permission_venda %}
+                            {% if has_permission_venda or request.user.is_superuser %}
+                            <div class="sb-sidenav-menu-heading">Vendas</div>
+                            <a class="nav-link {% if request.resolver_match.url_name == 'listar_vendas' or request.resolver_match.url_name == 'adicionar_venda' or request.resolver_match.url_name == 'editar_venda' or request.resolver_match.url_name == 'adicionar_item' %}active{% endif %}" href="{% url 'comercio:listar_vendas' %}">
+                                <div class="sb-nav-link-icon"><i class="fas fa-shopping-bag"></i></div>
+                                Ver Vendas
+                            </a>
+                            {% endif %}
+                            {% check_permission request.user "can_see_balanco" as has_permission_balanco %}
+                            {% if has_permission_balanco or request.user.is_superuser %}
+                            <div class="sb-sidenav-menu-heading">Financeiro</div>
+                            <a class="nav-link {% if request.resolver_match.url_name == 'ver_balanco' %}active{% endif %}" href="{% url 'comercio:ver_balanco' %}">
+                                <div class="sb-nav-link-icon"><i class="fas fa-coins"></i></div>
+                                Balanços
+                            </a>
+                            {% endif %}
+
+                            <div class="mt-4 text-center">
+                                <div id="google_translate_element"></div>
+                            </div>
+                        </div>
+                    </div>
+                </nav>
+            </div>
+            {% block content %}
+            {% endblock %}
+        </div>
+    <script src="https://code.jquery.com/jquery-3.3.1.min.js" type="text/javascript"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/popper.js/1.12.9/umd/popper.min.js" integrity="sha384-ApNbgh9B+Y1QKtv3Rn7W3mgPxhU9K/ScQsAP7hUibX39j7fakFPskvXusvfa0b4Q" crossorigin="anonymous"></script>
+    <script src="https://maxcdn.bootstrapcdn.com/bootstrap/4.0.0/js/bootstrap.min.js" integrity="sha384-JZR6Spejh4U02d8jOt6vLEHfe/JQGiRRSQQxSfFWpi1MquVdAyjUar5+76PVCmYl" crossorigin="anonymous"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/2.8.0/Chart.min.js" crossorigin="anonymous"></script>
+    <script src="{% static 'js/scripts.js' %}" type="text/javascript"></script>
+
+    <script>
+        const sidebar_collapse = (localStorage.getItem('sb|sidebar-toggle'));
+        const sidebar = $('#sidenavMenu');
+
+        if (sidebar_collapse === "true") {
+            sidebar.addClass('sb-sidenav-toggled');
+        } else{
+            sidebar.removeClass('sb-sidenav-toggled');
+        }
+    </script>
+    <script type="text/javascript">
+        function googleTranslateElementInit() {
+          new google.translate.TranslateElement({pageLanguage: 'pt-br', layout: google.translate.TranslateElement.InlineLayout.SIMPLE}, 'google_translate_element');
+        }
+    </script>
+    <script type="text/javascript" src="//translate.google.com/translate_a/element.js?cb=googleTranslateElementInit"></script>
+    {% block extrajs %}
+    {% endblock %}
+    </body>
+</html>
