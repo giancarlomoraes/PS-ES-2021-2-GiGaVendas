@@ -1,4 +1,4 @@
-﻿# Software Web para Gestão de Mercadorias e Vendas de Estabelecimentos Comercias
+﻿# Software Web para Gestão de Mercadorias e Vendas de Estabelecimentos Comerciais
 
 A princípio, no nosso MVP, teremos quatro tipos de perfis de acesso, sendo que cada perfil pode ser atrelado a um ou vários usuários:
 
